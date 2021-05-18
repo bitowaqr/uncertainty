@@ -1,0 +1,112 @@
+
+library(shiny)
+library(shinydashboard)
+library(ggplot2)
+
+ui <- dashboardPage(
+  dashboardHeader(
+    title = "course"
+  ),
+  dashboardSidebar(
+    sidebarMenu(
+      # Setting id makes input$tabs give the tabName of currently-selected tab
+      id = "tabs",
+      menuItem("Presentation", tabName = "pres_tab", icon = icon("dashboard")),
+      menuItem("Distributions",
+               menuItem("Normal", tabName = "rnorm", icon = icon("dashboard"))
+               ),
+      menuItem("Excel example", "xls_ab", icon = icon("circle"))
+    )
+  ),
+  dashboardBody(
+    tabItems(
+      
+      # presentation
+      tabItem(
+        tabName = "pres_tab",
+        div(style = "resize: both; overflow: auto; width = 90%; height: 600px;",
+            HTML(
+              '<iframe src="https://docs.google.com/presentation/d/e/2PACX-1vSp4gWDhab1aCTJNFDeV9zIGaotk9KfB1d0veQGhdroud_b9WX3c4oBr3TKBn0z-z9lXWF44n0Y5f4i/embed?start=false&loop=true&delayms=60000"
+            frameborder="0" width="100%" height="100%" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>'
+            )
+        )
+      ),
+      
+      # normal dist tab ----
+      tabItem(
+        tabName = "rnorm",
+        sidebarLayout(
+          sidebarPanel(
+            width = 3, 
+            sliderInput(inputId = "rnorm_n",label = "n", min = 1, max = 10000,value = 100, step = 100),
+            sliderInput(inputId = "rnorm_mean",label = "mean", min = -5, max = 5,value = 1, step = 0.1),
+            sliderInput(inputId = "rnorm_sd",label = "sd", min = 0, max = 10,value = 1, step = 0.1),
+            actionButton("rnorm_sample","Draw again")
+            ),
+          mainPanel(
+            plotOutput("rnorm_plot",width = "100%"),
+            div(style = "
+                width: 200px;
+                border: solid 1px; 
+                border-radius: 20px; 
+                height: 50px; 
+                margin-top: 20px; 
+                padding: 10px; 
+                background: white; 
+                vertical-align: center; 
+                text-align: center;",
+              textOutput("rnrom_txt")
+            ),
+            br(),
+            div(
+              style = "margin-top: 20px; width: 50%;",
+              verbatimTextOutput("rnrom_txt2")
+            )
+            )
+          )
+      ),
+      
+      
+      tabItem(
+        tabName = "xls",
+        a(href="downloadme.csv", "Download CSV", download=NA, target="_blank")
+        )
+      
+      
+      
+      
+      
+    )
+  )
+)
+
+
+server <- function(input, output, session){
+  
+  
+  rnorm_vals <- reactive({
+    input$rnorm_sample
+    rnorm(n = input$rnorm_n, mean = input$rnorm_mean, sd = input$rnorm_sd)
+  })
+  
+  output$rnorm_plot <- renderPlot({
+    y <- rnorm_vals()
+      ggplot() +
+        geom_histogram(aes(x = y, y = ..density..), col = "gray", size = 0.2, fill = "blue", alpha = 0.5, bins = length(y)/5) +
+        geom_line(aes(x = seq(-10,10,0.1), y = dnorm(seq(-10,10,0.1), mean = input$rnorm_mean, sd = input$rnorm_sd))) +
+        xlim(c(-10, 10)) +
+        xlab("Value") +
+        ylab("Frquency") +
+        theme_minimal()
+  })
+output$rnrom_txt <- renderText({
+  paste0("Mean =", round( mean(rnorm_vals()), 3),"; SD = ", round(sd(rnorm_vals()),3))
+})  
+output$rnrom_txt2 <- renderText({
+  vals <- paste0("\n  ", round(head(rnorm_vals()),4), collapse = "")
+  paste0("Sample values: ", vals)
+})
+  
+}
+
+shinyApp(ui, server)
