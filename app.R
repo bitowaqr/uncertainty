@@ -229,12 +229,8 @@ ui <- dashboardPage(
       tabItem(
         tabName = "xls_tab",
         
-        h4("Download the sample Excel workbook and complete the following tasks."),
-        tags$ol(
-        tags$li("Do this "),
-        tags$li("And that "),
-        tags$li("And this again ")
-        ),
+        h4("The Excel Workbook contains a decison tree and a simple sampling exercise."),
+        
         
         br(),br(),
         
